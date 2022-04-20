@@ -15,29 +15,37 @@ from lib.models.GameState import GameState
 app = Flask(__name__)
 
 game_state = GameState()
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route("/", methods=['POST'])
 @Arduino()
 def main(arduino_adapter: ArduinoAdapter):
     # arduino_adapter.send_serial_message()
     formatted_data = json.loads(request.data)
-    # print(formatted_data)
     game_state.update(**formatted_data)
-    # global last_action
-    # last_action = formatted_data
-    # with open(os.path.join(here, 'logs', f'{formatted_data["provider"]["timestamp"]}.json'), mode="w") as json_file:
-    #     json.dump(formatted_data, json_file)
 
     print(f"Updated: {game_state.previous.udpated_topics}")
-    if game_state.previous.udpated_topics:
+    print(f"Added: {game_state.added.added_topics}")
+    if game_state.previous.udpated_topics or game_state.added.added_topics:
         result = json.dumps(game_state, default=lambda o: getattr(o, '__dict__', str(o)))
         print(result)
 
     return "OK"
 
-# @app.route("/last", methods=['GET'])
-# def mainGET():
-#     return last_action
+@app.route("/", methods=['GET'])
+def main_get():
+    response = app.response_class(
+        response=json.dumps(game_state, default=lambda o: getattr(o, '__dict__', str(o))),
+        status=200,
+        mimetype="application/json"
+    )
+    return _build_cors_preflight_response(response)
+
+def _build_cors_preflight_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add('Access-Control-Allow-Headers', "*")
+    response.headers.add('Access-Control-Allow-Methods', "*")
+    return response
 
 if __name__ == "__main__":
-    app.run(port=8080, debug=True)
+    app.run(host="0.0.0.0",port=8080, debug=True)
