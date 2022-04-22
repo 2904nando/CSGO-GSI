@@ -1,6 +1,6 @@
 {
     "serial": {
-        "com_port": "COM3",
+        "com_port": "COM8",
         "baudrate": "9600"
     }
 }

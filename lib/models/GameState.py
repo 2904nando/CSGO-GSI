@@ -9,11 +9,18 @@ class GameState():
         self.previous = Previous(**game_state_response.get('previously', {}))
         self.added = Added(**game_state_response.get('added', {}))
 
-    def select_action(self):
-        if self.previous.udpated_topics:
-            pass
-        else:
-            return
+        if self.player.state.health == 0:
+            return "r"
+        elif self.player.state.health < 30:
+            return "y"
+        elif self.player.state.health >= 30:
+            return "g"
+
+    # def select_action(self):
+    #     if self.previous.udpated_topics:
+    #         pass
+    #     else:
+    #         return False
 
 
 class Provider():
@@ -71,7 +78,7 @@ class PlayerStats():
 class PlayerState():
     
     def __init__(self, **kwargs):
-        self.health = kwargs.get('health', None)
+        self.health = kwargs.get('health', 0)
         self.armor = kwargs.get('armor', None)
         self.flashed = kwargs.get('flashed', None)
         self.smoked = kwargs.get('smoked', None)
@@ -83,8 +90,11 @@ class PlayerWeapons():
     def __init__(self, **kwargs):
         weapons = sorted([Weapon(**kwargs[key]) for key in kwargs.keys() if kwargs[key]], key=lambda x: x.state)
 
-        self.on_hand = weapons[0] if len(weapons)>0 else {}
-        weapons.pop(0)
+        if len(weapons)>0:
+            self.on_hand = weapons[0]
+            weapons.pop(0)
+        else:
+            self.on_hand = {}
 
         self.grenades = [weapon for weapon in weapons if weapon.type == "Grenade"]
         weapons = list(filter(lambda weapon: weapon.type != "Grenade", weapons))
